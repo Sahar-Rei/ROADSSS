@@ -1,0 +1,1036 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>ROADSSS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Roboto+Mono:wght@400;500&family=Russo+One&display=swap">
+<style>
+/* Layout concept: one dispatch-console page cut into grey slabs by hard diagonals. Neon yellow is signal only: lines, state, action. Orbitron has no Cyrillic, so Russo One backs it up glyph by glyph. */
+:root {
+  --g0: #141517;
+  --g1: #1f2023;
+  --g2: #2b2c30;
+  --g3: #383a3f;
+  --panel: #17181b;
+  --panel-2: #222327;
+  --line: #4a4c52;
+  --line-soft: #3b3d42;
+  --fg: #f2f1ea;
+  --muted: #b3b2a9;
+  --y: #ffe600;
+  --y-hot: #fff45a;
+  --y-dim: rgba(255, 230, 0, 0.4);
+  --glow: rgba(255, 230, 0, 0.55);
+  --ink: #121212;
+  --font-display: "Orbitron", "Russo One", "Arial Black", Impact, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --cut: 20px;
+  --cut-poly: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut)));
+  --slant: clamp(28px, 5.2vw, 76px);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(60px + env(safe-area-inset-top, 0px)); }
+body {
+  margin: 0;
+  background: var(--g0);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  font-synthesis: none;
+  overflow-x: clip;
+  position: relative;
+}
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--y-hot); outline-offset: 3px; }
+::selection { background: var(--y); color: var(--ink); }
+
+.wrap {
+  position: relative; z-index: 1; width: 100%; max-width: 1200px; margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.1; font-weight: 700; }
+p { margin: 0; }
+.tag { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--y); }
+.mono { font-family: var(--font-mono); }
+
+.rule { height: 1px; background: linear-gradient(90deg, var(--y), var(--y-dim) 55%, transparent); transform-origin: left center; }
+.rule--dash { background: repeating-linear-gradient(90deg, var(--y-dim) 0 8px, transparent 8px 14px); }
+
+/* ---------- slabs: hard diagonal cuts between grey bands ---------- */
+.band { position: relative; isolation: isolate; padding-top: calc(var(--slant) + clamp(36px, 6vw, 84px)); padding-bottom: calc(var(--slant) + clamp(24px, 4vw, 56px)); --bg-band: var(--g2); }
+.band + .band { margin-top: calc(var(--slant) * -1); }
+.band::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background:
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px) 0 0 / 56px 56px,
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px) 0 0 / 56px 56px,
+    var(--bg-band);
+  clip-path: polygon(0 var(--slant), 100% 0, 100% calc(100% - var(--slant)), 0 100%);
+}
+/* neon slash drawn along each top cut */
+.band::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: calc(var(--slant) + 3px); z-index: -1; pointer-events: none;
+  background: var(--y);
+  clip-path: polygon(0 var(--slant), 100% 0, 100% 3px, 0 calc(var(--slant) + 3px));
+  -webkit-mask-image: linear-gradient(90deg, #000 var(--cutdraw, 100%), transparent var(--cutdraw, 100%));
+  mask-image: linear-gradient(90deg, #000 var(--cutdraw, 100%), transparent var(--cutdraw, 100%));
+}
+.band--first { padding-top: clamp(28px, 5vw, 60px); }
+.band--first::before { clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--slant)), 0 100%); }
+.band--first::after { display: none; }
+.band--last { padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)); margin-top: calc(var(--slant) * -1); }
+.band--last::before { clip-path: polygon(0 var(--slant), 100% 0, 100% 100%, 0 100%); }
+.band--g0 { --bg-band: var(--g0); }
+.band--g1 { --bg-band: var(--g1); }
+.band--g2 { --bg-band: var(--g2); }
+.band--g3 { --bg-band: var(--g3); }
+
+/* ---------- progress ---------- */
+.progress { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; height: 3px; z-index: 60; pointer-events: none; }
+.progress i { display: block; height: 100%; background: var(--y); box-shadow: 0 0 10px var(--glow), 0 0 24px var(--glow); transform: scaleX(0); transform-origin: left center; }
+
+/* ---------- header ---------- */
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 40;
+  background: rgba(31, 32, 35, 0.9);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line-soft);
+}
+.top__row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 12px; }
+.top nav { display: none; gap: 26px; font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.top nav a { position: relative; padding-block: 6px; transition: color .12s; }
+.top nav a::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--y); box-shadow: 0 0 8px var(--glow); transform: scaleX(0); transform-origin: left center; transition: transform .2s steps(4); }
+.top nav a:hover, .top nav a.is-on { color: var(--fg); }
+.top nav a:hover::after, .top nav a.is-on::after { transform: scaleX(1); }
+@media (min-width: 900px) { .top nav { display: flex; } }
+
+/* ---------- logo ---------- */
+.logo { font-family: var(--font-display); font-weight: 900; letter-spacing: 0.06em; color: var(--fg); text-shadow: 0 0 6px var(--glow), 0 0 22px var(--glow); }
+.logo b { color: var(--y); font-weight: 900; }
+.logo--sm { font-size: 20px; }
+.logo--xl { font-size: clamp(38px, 10vw, 96px); font-size: min(13cqi, 120px); line-height: 0.95; display: inline-block; white-space: nowrap; }
+
+/* ---------- glitch ---------- */
+.glitch { position: relative; display: inline-block; }
+.glitch::before, .glitch::after { content: attr(data-text); position: absolute; inset: 0; opacity: 0; pointer-events: none; text-shadow: none; }
+.glitch::before { color: var(--y-hot); }
+.glitch::after { color: #fff; mix-blend-mode: screen; }
+.glitch:hover::before, a:hover > .glitch::before, .btn:hover .glitch::before { opacity: 0.9; animation: gl-a 0.5s steps(1) infinite; }
+.glitch:hover::after, a:hover > .glitch::after, .btn:hover .glitch::after { opacity: 0.6; animation: gl-b 0.5s steps(1) infinite; }
+.glitch--scroll::before { opacity: var(--so, 0); transform: translate(calc(var(--sx, 0px) * -1), 0); }
+.glitch--scroll::after { opacity: var(--so, 0); transform: translate(var(--sx, 0px), 0); }
+@keyframes gl-a {
+  0% { clip-path: inset(0 0 82% 0); transform: translate(-3px, 0); }
+  20% { clip-path: inset(38% 0 32% 0); transform: translate(3px, 0); }
+  40% { clip-path: inset(72% 0 4% 0); transform: translate(-2px, 0); }
+  60% { clip-path: inset(14% 0 62% 0); transform: translate(2px, 0); }
+  80% { clip-path: inset(56% 0 18% 0); transform: translate(-3px, 0); }
+  100% { clip-path: inset(0 0 82% 0); transform: translate(0, 0); }
+}
+@keyframes gl-b {
+  0% { clip-path: inset(60% 0 10% 0); transform: translate(3px, 0); }
+  25% { clip-path: inset(8% 0 70% 0); transform: translate(-3px, 0); }
+  50% { clip-path: inset(46% 0 40% 0); transform: translate(2px, 0); }
+  75% { clip-path: inset(80% 0 2% 0); transform: translate(-2px, 0); }
+  100% { clip-path: inset(60% 0 10% 0); transform: translate(0, 0); }
+}
+
+/* ---------- buttons ---------- */
+.neon { display: inline-block; transition: filter .15s; }
+.neon:hover, .neon:focus-within { filter: drop-shadow(0 0 10px var(--glow)) drop-shadow(0 0 26px rgba(255, 230, 0, 0.3)); }
+.btn {
+  --cut: 12px;
+  position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 52px; padding: 0 28px; border: 0; cursor: pointer;
+  font-family: var(--font-display); font-weight: 700; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--fg); background: none; clip-path: var(--cut-poly);
+}
+.btn::before { content: ""; position: absolute; inset: 0; background: var(--y); z-index: -2; }
+.btn::after { content: ""; position: absolute; inset: 1px; background: var(--g0); clip-path: var(--cut-poly); z-index: -1; transition: background .1s; }
+.btn:hover::after { background: #2a2600; }
+.btn--fill { color: var(--ink); }
+.btn--fill::after { background: var(--y); }
+.btn--fill:hover::after { background: var(--y-hot); }
+.btn--fill .glitch::after { color: var(--ink); mix-blend-mode: normal; }
+.btn--sm { min-height: 40px; padding: 0 18px; font-size: 11px; }
+
+/* ---------- hero ---------- */
+.hero { display: grid; gap: 36px; align-items: center; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1000px) { .hero { grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr); } }
+.hero__main { container-type: inline-size; }
+.hero__meta { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-bottom: 22px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em; color: var(--muted); }
+.hero__meta i { font-style: normal; color: var(--y); }
+.hero__slogan { font-size: clamp(22px, 4.2vw, 38px); font-weight: 700; max-width: 30ch; margin-top: 20px; text-transform: uppercase; }
+.hero__slogan em { font-style: normal; color: var(--y); text-shadow: 0 0 18px var(--glow); }
+.hero__lead { margin-top: 20px; max-width: 54ch; color: var(--muted); font-size: 17px; }
+.hero__cta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 32px; }
+.logo--xl .glitch { animation: boot 1.1s steps(1) .45s both; }
+@keyframes boot { 0% { opacity: 0; } 6% { opacity: 1; } 9% { opacity: .12; } 13% { opacity: 1; } 31% { opacity: 1; } 34% { opacity: .35; } 37% { opacity: 1; } 100% { opacity: 1; } }
+.hud { position: relative; width: 100%; max-width: 380px; justify-self: center; aspect-ratio: 1; }
+.hud svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.hud .spin { transform-origin: 200px 200px; animation: spin 40s linear infinite; }
+.hud .spin-r { transform-origin: 200px 200px; animation: spin 26s linear infinite reverse; }
+.hud .cube { filter: drop-shadow(0 0 8px var(--glow)); }
+.hud .chev polygon { animation: chev 1.2s steps(1) infinite; }
+.hud .chev polygon:nth-child(2) { animation-delay: .2s; }
+.hud .chev polygon:nth-child(3) { animation-delay: .4s; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes chev { 0%, 100% { opacity: .25; } 40% { opacity: 1; } }
+
+/* ---------- marquee ---------- */
+.marq { position: relative; z-index: 2; margin-top: clamp(40px, 6vw, 76px); overflow: hidden; padding-block: 36px; }
+.marq__rot { transform: rotate(-2.2deg); width: 112%; margin-left: -6%; }
+.marq__row { display: flex; overflow: hidden; white-space: nowrap; }
+.marq__row--a { background: var(--y); color: var(--ink); box-shadow: 0 0 30px rgba(255, 230, 0, 0.25); }
+.marq__row--b { background: var(--panel); border-block: 1px solid var(--y-dim); color: var(--y); }
+.marq__track { display: flex; flex: none; will-change: transform; }
+.marq__item { padding: 10px 26px; font-family: var(--font-display); font-weight: 900; font-size: clamp(17px, 2.8vw, 28px); letter-spacing: 0.08em; text-transform: uppercase; }
+.marq__row--b .marq__item { color: transparent; -webkit-text-stroke: 1px var(--y); }
+.marq__item::after { content: "///"; margin-left: 26px; font-family: var(--font-mono); font-weight: 500; opacity: .7; -webkit-text-stroke: 0; color: inherit; }
+.marq__tape { height: 10px; background: repeating-linear-gradient(-45deg, var(--y) 0 10px, var(--ink) 10px 20px); }
+
+/* ---------- sections ---------- */
+.sec__head { display: grid; gap: 14px; margin-bottom: 36px; }
+.sec__head h2, .h2 { font-size: clamp(26px, 5vw, 46px); font-weight: 900; text-transform: uppercase; }
+.sec__head p { color: var(--muted); max-width: 60ch; }
+
+/* terminal */
+.term { background: var(--panel); border: 1px solid var(--line); clip-path: var(--cut-poly); }
+.term__bar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--line); font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.term__bar span { width: 9px; height: 9px; background: var(--line); }
+.term__bar span:first-child { background: var(--y); box-shadow: 0 0 8px var(--glow); }
+.term__bar em { margin-left: auto; font-style: normal; letter-spacing: 0.1em; }
+.term__body { padding: 22px 18px 26px; font-family: var(--font-mono); font-size: 14px; line-height: 1.75; display: grid; gap: 2px; overflow-wrap: anywhere; }
+.term__body .ln { min-width: 0; }
+.term__body .p { color: var(--y); }
+.term__body .c { color: var(--muted); }
+.term__body .ok { color: var(--fg); }
+.term__body .gap { height: 10px; }
+.cursor { display: inline-block; width: 9px; height: 1.1em; background: var(--y); vertical-align: text-bottom; margin-left: 4px; box-shadow: 0 0 8px var(--glow); animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+@media (min-width: 700px) { .term__body { padding: 28px 30px 32px; font-size: 15px; } }
+
+/* cards */
+.grid { display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 720px) { .grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1060px) { .grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.card-wrap { display: block; transition: filter .15s, translate .12s; }
+.card-wrap:hover { filter: drop-shadow(0 0 12px var(--glow)); translate: 0 -3px; }
+.card { background: var(--y-dim); clip-path: var(--cut-poly); padding: 1px; height: 100%; --cut: 26px; transition: background .1s; }
+.card-wrap:hover .card { background: var(--y); }
+.card__in { background: var(--panel); clip-path: var(--cut-poly); padding: 26px 22px 24px; height: 100%; display: flex; flex-direction: column; gap: 16px; position: relative; }
+.card__code { display: flex; justify-content: space-between; gap: 10px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; color: var(--muted); }
+.card__code b { color: var(--y); font-weight: 500; }
+.card h3 { font-size: 19px; font-weight: 700; text-transform: uppercase; }
+.card p { color: var(--muted); font-size: 15px; }
+.card__line { height: 2px; background: var(--y); box-shadow: 0 0 10px var(--glow); width: 64px; transform-origin: left center; }
+.meter { margin-top: auto; display: grid; gap: 10px; padding-top: 10px; }
+.meter__nums { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+.meter__nums strong { font-family: var(--font-display); font-size: 20px; color: var(--fg); font-weight: 700; }
+.meter__nums span { color: var(--muted); text-align: right; }
+.bar { position: relative; height: 10px; background: var(--panel-2); border: 1px solid var(--line); }
+.bar__fill { position: absolute; inset: 0; width: var(--p); background: var(--y); box-shadow: 0 0 12px var(--glow); transform-origin: left center; }
+.bar::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(23, 24, 27, 0.9) calc(10% - 1px) 10%); pointer-events: none; }
+.card__foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.card__foot a:hover { text-shadow: 0 0 10px var(--glow); }
+.note { margin-top: 18px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 0.06em; }
+
+/* route: stacked by default, horizontal and pinned when script enables it */
+.route__track { display: none; }
+.route__rail { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+.stop { transition: opacity .12s linear, filter .15s; }
+.stop .card { --cut: 22px; }
+.stop__dl { display: flex; justify-content: space-between; gap: 16px; margin: auto 0 0; padding-top: 14px; border-top: 1px dashed var(--y-dim); font-family: var(--font-mono); font-size: 12px; }
+.stop__dl dt { color: var(--muted); }
+.stop__dl dd { margin: 0; color: var(--fg); text-align: right; }
+.route.is-horizontal .route__stage { height: 100vh; height: 100svh; padding-top: 72px; padding-bottom: 20px; display: flex; align-items: center; }
+.route.is-horizontal .route__inner { display: grid; gap: 20px; width: 100%; }
+.route.is-horizontal .sec__head { margin-bottom: 0; gap: 10px; }
+.route.is-horizontal .route__viewport { overflow: hidden; padding-block: 16px; margin-block: -16px; }
+.route.is-horizontal .route__rail { display: flex; width: max-content; gap: 22px; }
+.route.is-horizontal .stop { width: min(80vw, 440px); flex: none; opacity: .5; }
+.route.is-horizontal .stop.is-passed { opacity: .72; }
+.route.is-horizontal .stop.is-active { opacity: 1; filter: drop-shadow(0 0 12px var(--glow)); animation: snap .45s steps(1) 1; }
+.route.is-horizontal .stop.is-active .card { background: var(--y); }
+@keyframes snap { 0% { opacity: .2; } 15% { opacity: 1; } 30% { opacity: .45; } 45% { opacity: 1; } 100% { opacity: 1; } }
+.route.is-horizontal .route__track { display: block; position: relative; height: 46px; margin-inline: 30px; --p: 0; }
+.route__line { position: absolute; left: 0; right: 0; top: 10px; height: 2px; background: var(--line); }
+.route__fill { position: absolute; inset: 0; background: var(--y); box-shadow: 0 0 10px var(--glow); transform-origin: left center; transform: scaleX(var(--p, 0)); }
+.route__node { position: absolute; top: 4px; left: calc(var(--i) * 25%); transform: translateX(-50%); display: grid; justify-items: center; gap: 8px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; color: var(--muted); white-space: nowrap; }
+.route__node::before { content: ""; width: 14px; height: 14px; background: var(--g3); border: 2px solid var(--line); transform: rotate(45deg); transition: background .1s, border-color .1s; }
+.route__node.is-on { color: var(--y); }
+.route__node.is-on::before { background: var(--y); border-color: var(--y); box-shadow: 0 0 10px var(--glow); }
+.route__truck { position: absolute; top: 4px; left: calc(var(--p, 0) * 100%); width: 38px; height: 14px; transform: translateX(-50%); background: var(--y); clip-path: polygon(0 0, 72% 0, 100% 50%, 72% 100%, 0 100%, 18% 50%); filter: drop-shadow(0 0 8px var(--glow)); }
+
+/* stats */
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--line); background: var(--panel); clip-path: var(--cut-poly); --cut: 26px; }
+@media (min-width: 900px) { .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.stat { padding: 28px 18px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); display: grid; gap: 8px; align-content: start; min-width: 0; }
+.stat:nth-child(2n) { border-right: 0; }
+.stat:nth-last-child(-n+2) { border-bottom: 0; }
+@media (min-width: 900px) {
+  .stat { padding: 36px 26px; border-bottom: 0; }
+  .stat:nth-child(2n) { border-right: 1px solid var(--line); }
+  .stat:last-child { border-right: 0; }
+}
+.stat__n { font-family: var(--font-display); font-weight: 900; font-size: clamp(24px, 5.6vw, 44px); line-height: 1; color: var(--fg); text-shadow: 0 0 6px var(--glow), 0 0 22px var(--glow); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.stat__l { color: var(--muted); font-size: 14px; }
+
+/* quote form */
+.donate { display: grid; gap: 36px; }
+@media (min-width: 940px) { .donate { grid-template-columns: 0.85fr 1.15fr; gap: 56px; align-items: start; } }
+.donate__lead { color: var(--muted); margin-top: 16px; max-width: 46ch; }
+.donate__facts { display: grid; margin: 26px 0 0; font-family: var(--font-mono); font-size: 13px; }
+.donate__facts div { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-top: 1px dashed var(--y-dim); }
+.donate__facts div:last-child { border-bottom: 1px dashed var(--y-dim); }
+.donate__facts dt { color: var(--muted); }
+.donate__facts dd { margin: 0; color: var(--fg); text-align: right; }
+.form-wrap { background: var(--y-dim); clip-path: var(--cut-poly); padding: 1px; --cut: 28px; }
+.form { background: var(--panel); clip-path: var(--cut-poly); padding: 28px 20px 30px; display: grid; gap: 24px; }
+@media (min-width: 700px) { .form { padding: 36px 34px 38px; } }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 12px; }
+legend, .lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); padding: 0; margin-bottom: 4px; }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip { position: relative; }
+.chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.chip span { display: inline-flex; align-items: center; justify-content: center; min-width: 74px; min-height: 46px; padding: 0 16px; border: 1px solid var(--line); background: var(--panel-2); font-family: var(--font-display); font-weight: 700; font-size: 13px; text-transform: uppercase; cursor: pointer; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px)); transition: border-color .1s, background .1s, color .1s; }
+.chip span:hover { border-color: var(--y); }
+.chip input:checked + span { background: var(--y); border-color: var(--y); color: var(--ink); }
+.chip input:focus-visible + span { outline: 2px solid var(--y-hot); outline-offset: 2px; }
+.row { display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 620px) { .row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field input, .field select {
+  width: 100%; min-height: 48px; padding: 8px 14px; background: var(--g0); color: var(--fg);
+  border: 1px solid var(--line); border-left: 3px solid var(--y-dim); border-radius: 0;
+  font-family: var(--font-mono); font-size: 15px; outline: none;
+  transition: border-color .1s, box-shadow .1s, background .1s;
+}
+.field input::placeholder { color: #77746b; }
+.field input:focus, .field select:focus { border-color: var(--y); border-left-color: var(--y); box-shadow: 0 0 0 1px var(--y), 0 0 18px rgba(255, 230, 0, 0.3); background: #15140a; }
+.field select { appearance: none; -webkit-appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--y) 50%), linear-gradient(135deg, var(--y) 50%, transparent 50%); background-position: calc(100% - 20px) 21px, calc(100% - 14px) 21px; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 40px; }
+.field select option { background: var(--panel); color: var(--fg); }
+.field input:user-invalid { border-color: var(--y-hot); }
+.form__status { min-height: 1.6em; font-family: var(--font-mono); font-size: 13px; color: var(--y-hot); overflow-wrap: anywhere; }
+.form__status.is-ok { color: var(--fg); }
+.form__act { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+.form__hint { color: var(--muted); font-size: 13px; max-width: 34ch; }
+
+/* footer */
+.foot__cols { display: grid; gap: 34px; padding-block: 38px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .foot__cols { grid-template-columns: 1.3fr 1fr 1fr 1fr; } }
+.foot h4 { margin: 0 0 14px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--y); }
+.foot ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px; color: var(--muted); }
+.foot li { overflow-wrap: anywhere; }
+.foot a { transition: color .1s, text-shadow .1s; }
+.foot a:hover { color: var(--fg); text-shadow: 0 0 10px var(--glow); }
+.foot__about { color: var(--muted); font-size: 14px; max-width: 34ch; margin-top: 14px; }
+.foot__legal { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 24px; padding-top: 22px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hud .spin, .hud .spin-r, .hud .chev polygon, .cursor, .logo--xl .glitch { animation: none; }
+  .glitch::before, .glitch::after { display: none; }
+  .progress { display: none; }
+}
+</style>
+
+<div class="progress" aria-hidden="true"><i></i></div>
+
+<header class="top">
+  <div class="wrap">
+    <div class="top__row">
+      <a href="#top" class="logo logo--sm" aria-label="ROADSSS, на главную"><span class="glitch" data-text="ROADSSS">ROAD<b>SSS</b></span></a>
+      <nav aria-label="Основная навигация">
+        <a href="#about">О компании</a>
+        <a href="#services">Направления</a>
+        <a href="#route">Маршрут</a>
+        <a href="#impact">Показатели</a>
+        <a href="#quote">Заявка</a>
+      </nav>
+      <span class="neon"><a class="btn btn--fill btn--sm" href="#quote"><span class="glitch" data-text="Рассчитать">Рассчитать</span></a></span>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="band band--first band--g2" aria-labelledby="hero-title">
+    <div class="wrap hero">
+      <div class="hero__main">
+        <div class="hero__meta" data-hero>
+          <span><i>●</i> SYS.ONLINE</span>
+          <span>СКВОЗНАЯ ЛОГИСТИКА</span>
+          <span>RD-777</span>
+        </div>
+        <h1 id="hero-title" data-hero>
+          <span class="logo logo--xl"><span class="glitch glitch--scroll" data-text="ROADSSS">ROAD<b>SSS</b></span></span>
+        </h1>
+        <p class="hero__slogan" data-hero>Логистика <em>высшего</em> тира</p>
+        <p class="hero__lead" data-hero>Возим грузы по земле, морю и воздуху одним контрактом: ставка фиксируется до отправки, трекинг обновляется каждые 15 минут, получатель подписывает электронный CMR.</p>
+        <div class="hero__cta" data-hero>
+          <span class="neon"><a class="btn btn--fill" href="#quote"><span class="glitch" data-text="Рассчитать перевозку">Рассчитать перевозку</span></a></span>
+          <span class="neon"><a class="btn" href="#services"><span class="glitch" data-text="Направления">Направления</span></a></span>
+        </div>
+      </div>
+
+      <div class="hud" aria-hidden="true" data-hero>
+        <svg viewBox="0 0 400 400" fill="none">
+          <g class="spin" style="stroke: var(--y-dim)" stroke-width="1">
+            <circle cx="200" cy="200" r="186" stroke-dasharray="3 9"/>
+            <path d="M200 8v22M200 370v22M8 200h22M370 200h22" stroke-width="2" style="stroke: var(--y)"/>
+          </g>
+          <g class="scrub-ring" style="stroke: var(--y)" stroke-width="2">
+            <circle cx="200" cy="200" r="142" stroke-dasharray="90 40 20 40"/>
+            <rect x="193" y="50" width="14" height="12" style="fill: var(--y); stroke: none"/>
+          </g>
+          <g class="spin-r" style="stroke: var(--line)" stroke-width="1">
+            <circle cx="200" cy="200" r="98" stroke-dasharray="2 6"/>
+          </g>
+          <g class="cube" stroke-width="2" style="stroke: var(--y)">
+            <polygon points="131,160 200,120 269,160 200,200" style="fill: rgba(255,230,0,0.10)"/>
+            <polygon points="131,160 200,200 200,280 131,240" style="fill: rgba(255,230,0,0.03)"/>
+            <polygon points="200,200 269,160 269,240 200,280" style="fill: rgba(255,230,0,0.07)"/>
+            <path d="M154 173.3v80M177 186.7v80M223 186.7v80M246 173.3v80" style="stroke: var(--y-dim)" stroke-width="1"/>
+          </g>
+          <path d="M20 340h70l14-14h40" style="stroke: var(--y-dim)" stroke-width="1"/>
+          <text x="20" y="362" style="fill: var(--muted); font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px">40'HC  GPS ONLINE</text>
+          <text x="20" y="30" style="fill: var(--y); font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px">ROADSSS / CORE</text>
+          <text x="380" y="30" text-anchor="end" style="fill: var(--muted); font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px">ETA <tspan id="eta" style="fill: var(--fg)">02:14:09</tspan></text>
+          <g class="chev" style="fill: var(--y); stroke: none">
+            <polygon points="318,342 330,350 318,358"/>
+            <polygon points="336,342 348,350 336,358"/>
+            <polygon points="354,342 366,350 354,358"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="marq" aria-hidden="true">
+      <div class="marq__rot">
+        <div class="marq__row marq__row--a"><div class="marq__track" data-unit="<span class='marq__item'>Доставка в окно</span><span class='marq__item'>FTL · LTL · FCL · LCL</span><span class='marq__item'>Дверь в дверь</span><span class='marq__item'>GPS каждые 15 мин</span>"><span class="marq__item">Доставка в окно</span><span class="marq__item">FTL · LTL · FCL · LCL</span><span class="marq__item">Дверь в дверь</span><span class="marq__item">GPS каждые 15 мин</span></div></div>
+        <div class="marq__row marq__row--b"><div class="marq__track" data-unit="<span class='marq__item'>ROADSSS</span><span class='marq__item'>Логистика высшего тира</span><span class='marq__item'>EXW · FCA · DAP · DDP</span><span class='marq__item'>CMR · AWB · B/L</span>"><span class="marq__item">ROADSSS</span><span class="marq__item">Логистика высшего тира</span><span class="marq__item">EXW · FCA · DAP · DDP</span><span class="marq__item">CMR · AWB · B/L</span></div></div>
+        <div class="marq__tape"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band--g1" id="about" aria-labelledby="about-title">
+    <div class="wrap">
+      <div class="sec__head" data-reveal>
+        <span class="tag">[ о_компании ]</span>
+        <h2 id="about-title" data-scramble>Диспетчерская</h2>
+        <p>Коротко о том, чем мы занимаемся и как устроена работа от заявки до выдачи груза.</p>
+      </div>
+      <div class="term" data-reveal>
+        <div class="term__bar"><span></span><span></span><span></span><em>roadsss://dispatch.log</em></div>
+        <div class="term__body">
+          <div class="ln" data-line><span class="p">&gt;</span> roadsss --about</div>
+          <div class="ln c" data-line>ROADSSS Logistics: оператор сквозных перевозок. Один договор, один диспетчер, весь маршрут от двери до двери.</div>
+          <div class="gap"></div>
+          <div class="ln" data-line><span class="p">&gt;</span> roadsss --mission</div>
+          <div class="ln ok" data-line>Доставлять груз в то окно, которое назвали при расчёте, и показывать каждый километр пути.</div>
+          <div class="gap"></div>
+          <div class="ln" data-line><span class="p">&gt;</span> roadsss --principles</div>
+          <div class="ln ok" data-line>[1] Ставка фиксируется в договоре до отправки. Без доплат в пути.</div>
+          <div class="ln ok" data-line>[2] GPS и датчики температуры: обновление каждые 15 минут.</div>
+          <div class="ln ok" data-line>[3] Один диспетчер ведёт груз от заявки до подписи получателя.</div>
+          <div class="gap"></div>
+          <div class="ln" data-line><span class="p">&gt;</span> roadsss --quote<span class="cursor"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band--g3" id="services" aria-labelledby="services-title">
+    <div class="wrap">
+      <div class="sec__head" data-reveal>
+        <span class="tag">[ направления ]</span>
+        <h2 id="services-title" data-scramble>Линии и сервисы</h2>
+        <p>Выберите режим перевозки. Показатель на карточке: доля рейсов, пришедших в согласованное окно за последние 12 месяцев.</p>
+      </div>
+      <div class="grid grid--3">
+        <div class="card-wrap" data-card>
+          <article class="card"><div class="card__in">
+            <div class="card__code"><b>ROAD//FTL</b><span>ЛИНИЯ: АКТИВНА</span></div>
+            <div class="card__line" data-line-draw></div>
+            <h3>Авто: FTL и LTL</h3>
+            <p>Тент 82 м³ и 20 т, рефрижератор, изотерм. Сборные грузы от одной паллеты EUR 1200×800.</p>
+            <div class="meter">
+              <div class="meter__nums"><strong data-count="98.6" data-decimals="1" data-suffix="%">98,6%</strong><span>рейсов в срок</span></div>
+              <div class="bar" role="progressbar" aria-valuenow="98.6" aria-valuemin="0" aria-valuemax="100" aria-label="Автоперевозки в срок"><div class="bar__fill" style="--p:98.6%"></div></div>
+              <div class="card__foot"><span>FTL · LTL · REEFER</span><a href="#quote" class="tag">Рассчитать →</a></div>
+            </div>
+          </div></article>
+        </div>
+        <div class="card-wrap" data-card>
+          <article class="card"><div class="card__in">
+            <div class="card__code"><b>ROAD//SEA</b><span>ЛИНИЯ: АКТИВНА</span></div>
+            <div class="card__line" data-line-draw></div>
+            <h3>Море и контейнеры</h3>
+            <p>Контейнеры 20'DC, 40'HC и reefer, FCL и LCL. Бронируем слот у линии и ведём груз до выдачи в порту.</p>
+            <div class="meter">
+              <div class="meter__nums"><strong data-count="94.1" data-decimals="1" data-suffix="%">94,1%</strong><span>рейсов в срок</span></div>
+              <div class="bar" role="progressbar" aria-valuenow="94.1" aria-valuemin="0" aria-valuemax="100" aria-label="Морские перевозки в срок"><div class="bar__fill" style="--p:94.1%"></div></div>
+              <div class="card__foot"><span>FCL · LCL · 40'HC</span><a href="#quote" class="tag">Рассчитать →</a></div>
+            </div>
+          </div></article>
+        </div>
+        <div class="card-wrap" data-card>
+          <article class="card"><div class="card__in">
+            <div class="card__code"><b>ROAD//AIR</b><span>ЛИНИЯ: ЭКСПРЕСС</span></div>
+            <div class="card__line" data-line-draw></div>
+            <h3>Авиа и экспресс</h3>
+            <p>От 45 кг до чартера. Выделенный диспетчер на всём пути и документы AWB оформляются до вылета.</p>
+            <div class="meter">
+              <div class="meter__nums"><strong data-count="99.2" data-decimals="1" data-suffix="%">99,2%</strong><span>рейсов в срок</span></div>
+              <div class="bar" role="progressbar" aria-valuenow="99.2" aria-valuemin="0" aria-valuemax="100" aria-label="Авиаперевозки в срок"><div class="bar__fill" style="--p:99.2%"></div></div>
+              <div class="card__foot"><span>AWB · EXPRESS · CHARTER</span><a href="#quote" class="tag">Рассчитать →</a></div>
+            </div>
+          </div></article>
+        </div>
+        <div class="card-wrap" data-card>
+          <article class="card"><div class="card__in">
+            <div class="card__code"><b>ROAD//HUB</b><span>СКЛАД: ОТКРЫТ</span></div>
+            <div class="card__line" data-line-draw></div>
+            <h3>Склад и кросс-докинг</h3>
+            <p>Приёмка, хранение паллет, кросс-док и комплектация заказов. Остатки видны в WMS в реальном времени.</p>
+            <div class="meter">
+              <div class="meter__nums"><strong data-count="99.8" data-decimals="1" data-suffix="%">99,8%</strong><span>точность комплектации</span></div>
+              <div class="bar" role="progressbar" aria-valuenow="99.8" aria-valuemin="0" aria-valuemax="100" aria-label="Точность комплектации на складе"><div class="bar__fill" style="--p:99.8%"></div></div>
+              <div class="card__foot"><span>WMS · CROSS-DOCK</span><a href="#quote" class="tag">Рассчитать →</a></div>
+            </div>
+          </div></article>
+        </div>
+        <div class="card-wrap" data-card>
+          <article class="card"><div class="card__in">
+            <div class="card__code"><b>ROAD//CUSTOMS</b><span>ПОСТ: ОНЛАЙН</span></div>
+            <div class="card__line" data-line-draw></div>
+            <h3>Таможня и документы</h3>
+            <p>Декларации, подбор кодов ТН ВЭД, сертификаты и условия Incoterms: EXW, FCA, DAP, DDP.</p>
+            <div class="meter">
+              <div class="meter__nums"><strong data-count="91" data-decimals="0" data-suffix="%">91%</strong><span>выпуск за 1 рабочий день</span></div>
+              <div class="bar" role="progressbar" aria-valuenow="91" aria-valuemin="0" aria-valuemax="100" aria-label="Выпуск за один рабочий день"><div class="bar__fill" style="--p:91%"></div></div>
+              <div class="card__foot"><span>ДТ · ТН ВЭД · INCOTERMS</span><a href="#quote" class="tag">Рассчитать →</a></div>
+            </div>
+          </div></article>
+        </div>
+        <div class="card-wrap" data-card>
+          <article class="card"><div class="card__in">
+            <div class="card__code"><b>ROAD//HEAVY</b><span>ЛИНИЯ: ПО ЗАПРОСУ</span></div>
+            <div class="card__line" data-line-draw></div>
+            <h3>Негабарит и проекты</h3>
+            <p>Трал, разрешения, сопровождение и проектная логистика для оборудования тяжелее 20 т.</p>
+            <div class="meter">
+              <div class="meter__nums"><strong data-count="96.4" data-decimals="1" data-suffix="%">96,4%</strong><span>проектов в срок</span></div>
+              <div class="bar" role="progressbar" aria-valuenow="96.4" aria-valuemin="0" aria-valuemax="100" aria-label="Проектные перевозки в срок"><div class="bar__fill" style="--p:96.4%"></div></div>
+              <div class="card__foot"><span>ТРАЛ · СОПРОВОЖДЕНИЕ</span><a href="#quote" class="tag">Рассчитать →</a></div>
+            </div>
+          </div></article>
+        </div>
+      </div>
+      <p class="note">// ДЕМО-ДАННЫЕ: замените показатели на реальные перед запуском</p>
+    </div>
+  </section>
+
+  <section class="band band--g1 route" id="route" aria-labelledby="route-title">
+    <div class="route__stage">
+      <div class="wrap route__inner">
+        <div class="sec__head" data-reveal>
+          <span class="tag">[ маршрут ]</span>
+          <h2 id="route-title" data-scramble>Путь груза</h2>
+          <p>Пять контрольных точек от заявки до подписи получателя.</p>
+        </div>
+        <div class="route__track" aria-hidden="true">
+          <div class="route__line"><i class="route__fill"></i></div>
+          <span class="route__node is-on" style="--i:0">CP-01</span>
+          <span class="route__node" style="--i:1">CP-02</span>
+          <span class="route__node" style="--i:2">CP-03</span>
+          <span class="route__node" style="--i:3">CP-04</span>
+          <span class="route__node" style="--i:4">CP-05</span>
+          <span class="route__truck"></span>
+        </div>
+        <div class="route__viewport">
+          <ol class="route__rail">
+            <li class="stop is-active" data-stop>
+              <div class="card"><div class="card__in">
+                <div class="card__code"><b>CP-01</b><span>ЗАЯВКА</span></div>
+                <div class="card__line"></div>
+                <h3>Ставка за 2 часа</h3>
+                <p>Присылаете адреса, вес и габариты. Мы называем цену и срок и фиксируем их в договоре.</p>
+                <dl class="stop__dl"><dt>Срок ответа</dt><dd>до 2 часов</dd></dl>
+              </div></div>
+            </li>
+            <li class="stop" data-stop>
+              <div class="card"><div class="card__in">
+                <div class="card__code"><b>CP-02</b><span>ЗАБОР</span></div>
+                <div class="card__line"></div>
+                <h3>Машина к воротам</h3>
+                <p>Подаём машину в окно два часа. Водитель сверяет пломбу и количество паллет по накладной.</p>
+                <dl class="stop__dl"><dt>Окно подачи</dt><dd>2 часа</dd></dl>
+              </div></div>
+            </li>
+            <li class="stop" data-stop>
+              <div class="card"><div class="card__in">
+                <div class="card__code"><b>CP-03</b><span>ТАМОЖНЯ</span></div>
+                <div class="card__line"></div>
+                <h3>Документы без остановок</h3>
+                <p>Готовим декларацию, проверяем коды ТН ВЭД и сертификаты до того, как груз дойдёт до поста.</p>
+                <dl class="stop__dl"><dt>Выпуск</dt><dd>1 рабочий день</dd></dl>
+              </div></div>
+            </li>
+            <li class="stop" data-stop>
+              <div class="card"><div class="card__in">
+                <div class="card__code"><b>CP-04</b><span>МАГИСТРАЛЬ</span></div>
+                <div class="card__line"></div>
+                <h3>Груз в пути</h3>
+                <p>Основной участок по авто, морю или воздуху. GPS и датчики температуры шлют данные каждые 15 минут.</p>
+                <dl class="stop__dl"><dt>Трекинг</dt><dd>каждые 15 минут</dd></dl>
+              </div></div>
+            </li>
+            <li class="stop" data-stop>
+              <div class="card"><div class="card__in">
+                <div class="card__code"><b>CP-05</b><span>ДОСТАВКА</span></div>
+                <div class="card__line"></div>
+                <h3>Подпись получателя</h3>
+                <p>Выдаём груз по электронному CMR. Подписанный документ и фото приходят вам в тот же час.</p>
+                <dl class="stop__dl"><dt>ePOD</dt><dd>в тот же час</dd></dl>
+              </div></div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band--g2" id="impact" aria-labelledby="impact-title">
+    <div class="wrap">
+      <div class="sec__head" data-reveal>
+        <span class="tag">[ показатели ]</span>
+        <h2 id="impact-title" data-scramble>Статистика сети</h2>
+      </div>
+      <div class="stats" data-reveal>
+        <div class="stat"><div class="stat__n" data-count="187400">187 400</div><div class="stat__l">рейсов выполнено</div></div>
+        <div class="stat"><div class="stat__n" data-count="97.2" data-decimals="1" data-suffix="%">97,2%</div><div class="stat__l">доставок в согласованное окно</div></div>
+        <div class="stat"><div class="stat__n" data-count="64">64</div><div class="stat__l">страны в сети партнёров</div></div>
+        <div class="stat"><div class="stat__n" data-count="15" data-suffix=" мин">15 мин</div><div class="stat__l">шаг обновления трекинга</div></div>
+      </div>
+      <p class="note">// ДЕМО-ДАННЫЕ: замените цифры на реальные перед запуском</p>
+    </div>
+  </section>
+
+  <section class="band band--g3" id="quote" aria-labelledby="quote-title">
+    <div class="wrap">
+      <div class="donate">
+        <div data-reveal>
+          <span class="tag">[ заявка ]</span>
+          <h2 class="h2" id="quote-title" data-scramble style="margin-top: 14px;">Рассчитать перевозку</h2>
+          <p class="donate__lead">Расскажите, что и куда везти. Диспетчер вернётся со ставкой и сроком в течение двух часов.</p>
+          <dl class="donate__facts">
+            <div><dt>Ответ по ставке</dt><dd>до 2 часов</dd></div>
+            <div><dt>Ставка в договоре</dt><dd>фиксированная</dd></div>
+            <div><dt>Трекинг</dt><dd>каждые 15 минут</dd></div>
+          </dl>
+        </div>
+
+        <div class="form-wrap" data-reveal>
+          <form class="form" id="quote-form" novalidate>
+            <fieldset>
+              <legend>Режим</legend>
+              <div class="chips">
+                <label class="chip"><input type="radio" name="mode" value="Авто" checked><span>Авто</span></label>
+                <label class="chip"><input type="radio" name="mode" value="Море"><span>Море</span></label>
+                <label class="chip"><input type="radio" name="mode" value="Авиа"><span>Авиа</span></label>
+                <label class="chip"><input type="radio" name="mode" value="Мультимодал"><span>Мульти</span></label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Срочность</legend>
+              <div class="chips">
+                <label class="chip"><input type="radio" name="speed" value="стандарт" checked><span>Стандарт</span></label>
+                <label class="chip"><input type="radio" name="speed" value="экспресс"><span>Экспресс</span></label>
+                <label class="chip"><input type="radio" name="speed" value="сверхсрочно"><span>Срочно</span></label>
+              </div>
+            </fieldset>
+
+            <div class="row">
+              <div class="field">
+                <label class="lbl" for="from">Откуда</label>
+                <input id="from" name="from" type="text" autocomplete="off" placeholder="Город или порт отправления" required>
+              </div>
+              <div class="field">
+                <label class="lbl" for="to">Куда</label>
+                <input id="to" name="to" type="text" autocomplete="off" placeholder="Город или порт назначения" required>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label class="lbl" for="weight">Вес, кг</label>
+                <input id="weight" name="weight" type="number" inputmode="numeric" min="1" step="1" placeholder="например, 1200" required>
+              </div>
+              <div class="field">
+                <label class="lbl" for="incoterms">Условия поставки</label>
+                <select id="incoterms" name="incoterms">
+                  <option>Не знаю, подскажите</option>
+                  <option>EXW: со склада отправителя</option>
+                  <option>FCA: передача перевозчику</option>
+                  <option>FOB: на борту судна</option>
+                  <option>CIF: стоимость, страховка, фрахт</option>
+                  <option>DAP: доставка в пункт назначения</option>
+                  <option>DDP: доставка с пошлинами</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label class="lbl" for="name">Имя</label>
+                <input id="name" name="name" type="text" autocomplete="name" placeholder="Как к вам обращаться" required>
+              </div>
+              <div class="field">
+                <label class="lbl" for="contact">Телефон или email</label>
+                <input id="contact" name="contact" type="text" autocomplete="email" placeholder="+000 00 000 00 00 или you@example.com" required>
+              </div>
+            </div>
+
+            <div class="form__status" id="status" role="status" aria-live="polite"></div>
+            <div class="form__act">
+              <span class="neon"><button class="btn btn--fill" type="submit"><span class="glitch" data-text="Отправить заявку">Отправить заявку</span></button></span>
+              <p class="form__hint">Это демо-форма: заявка никуда не отправляется.</p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="band band--g0 band--last foot">
+  <div class="wrap">
+    <div class="foot__cols">
+      <div>
+        <a href="#top" class="logo logo--sm" aria-label="ROADSSS, наверх"><span class="glitch" data-text="ROADSSS">ROAD<b>SSS</b></span></a>
+        <p class="foot__about">Логистика высшего тира. Один договор на весь маршрут.</p>
+      </div>
+      <div>
+        <h4>Контакты</h4>
+        <ul>
+          <li>hello@roadsss.example</li>
+          <li>+000 00 000 00 00</li>
+          <li>Адрес офиса: укажите при запуске</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Сети</h4>
+        <ul>
+          <li><a href="#top">Telegram</a></li>
+          <li><a href="#top">Instagram</a></li>
+          <li><a href="#top">LinkedIn</a></li>
+          <li><a href="#top">YouTube</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Документы</h4>
+        <ul>
+          <li><a href="#top">Договор-оферта</a></li>
+          <li><a href="#top">Условия перевозки</a></li>
+          <li><a href="#top">Страхование грузов</a></li>
+          <li><a href="#top">Политика конфиденциальности</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="rule rule--dash" data-draw></div>
+    <div class="foot__legal">
+      <span>© 2026 ROADSSS. Все права защищены.</span>
+      <span>Лицензия экспедитора: укажите при запуске</span>
+      <span>SYS.ONLINE // RD-777</span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function () {
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var counters = [].slice.call(document.querySelectorAll("[data-count]"));
+
+  function fmtNum(n, d) {
+    return n.toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+  function counterText(el, v) {
+    return (el.dataset.prefix || "") + fmtNum(v, +(el.dataset.decimals || 0)) + (el.dataset.suffix || "");
+  }
+  function setFinal() {
+    counters.forEach(function (el) { el.textContent = counterText(el, +el.dataset.count); });
+  }
+
+  /* hero ETA readout */
+  (function () {
+    var eta = document.getElementById("eta");
+    if (!eta) return;
+    var left = 2 * 3600 + 14 * 60 + 9;
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    setInterval(function () {
+      left = left > 0 ? left - 1 : 3 * 3600;
+      eta.textContent = pad(Math.floor(left / 3600)) + ":" + pad(Math.floor(left / 60) % 60) + ":" + pad(left % 60);
+    }, 1000);
+  })();
+
+  /* quote form */
+  (function () {
+    var form = document.getElementById("quote-form");
+    var status = document.getElementById("status");
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var d = new FormData(form);
+      var from = (d.get("from") || "").toString().trim();
+      var to = (d.get("to") || "").toString().trim();
+      var weight = Number(d.get("weight"));
+      var name = (d.get("name") || "").toString().trim();
+      var contact = (d.get("contact") || "").toString().trim();
+      status.classList.remove("is-ok");
+      function fail(msg, id) { status.textContent = msg; document.getElementById(id).focus(); }
+      if (!from) return fail("Укажите, откуда забрать груз.", "from");
+      if (!to) return fail("Укажите, куда доставить груз.", "to");
+      if (!weight || weight < 1) return fail("Укажите вес груза в килограммах.", "weight");
+      if (!name) return fail("Введите имя.", "name");
+      var isMail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
+      var isPhone = contact.replace(/\D/g, "").length >= 7;
+      if (!isMail && !isPhone) return fail("Проверьте контакт: нужен телефон или адрес вида name@domain.com.", "contact");
+      var id = "RD-" + (1000 + Math.floor(Math.random() * 9000));
+      status.classList.add("is-ok");
+      status.textContent = "> Заявка " + id + ": " + d.get("mode") + ", " + d.get("speed") + ", " + from + " → " + to + ", " + fmtNum(weight, 0) + " кг. Демо-режим: ничего не отправлено.";
+    });
+  })();
+
+  if (!window.gsap || !window.ScrollTrigger || reduce) { setFinal(); return; }
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  function wipe(el, from, vars, st) {
+    return gsap.fromTo(el, { clipPath: from }, Object.assign({
+      clipPath: "inset(0% 0% 0% 0%)", duration: 0.6, ease: "expo.out", clearProps: "clipPath", scrollTrigger: st
+    }, vars || {}));
+  }
+  var chars = "▓▒░█/\\<>_#01";
+  function scramble(el, dur) {
+    var fin = el.getAttribute("data-final") || el.textContent;
+    el.setAttribute("data-final", fin);
+    el.setAttribute("aria-label", fin);
+    var o = { p: 0 };
+    gsap.to(o, {
+      p: 1, duration: dur, ease: "none",
+      onUpdate: function () {
+        var n = Math.floor(o.p * fin.length), s = "";
+        for (var i = 0; i < fin.length; i++) {
+          s += (i < n || fin[i] === " ") ? fin[i] : chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        el.textContent = s;
+      },
+      onComplete: function () { el.textContent = fin; el.removeAttribute("aria-label"); }
+    });
+  }
+
+  try {
+    /* scroll progress */
+    gsap.to(".progress i", { scaleX: 1, ease: "none", scrollTrigger: { trigger: document.body, start: "top top", end: "bottom bottom", scrub: 0.2 } });
+
+    /* hero: load sequence, hard wipes */
+    wipe("[data-hero]", "inset(0% 100% 0% 0%)", { duration: 0.7, stagger: 0.09 });
+
+    /* hero: parallax and scroll-driven HUD */
+    var heroST = { trigger: ".hero", start: "top top", end: "bottom top", scrub: true };
+    gsap.to(".logo--xl", { yPercent: -12, ease: "none", scrollTrigger: heroST });
+    gsap.to(".hero__slogan, .hero__lead, .hero__cta", { yPercent: -22, ease: "none", scrollTrigger: heroST });
+    gsap.to(".hud", { yPercent: -28, ease: "none", scrollTrigger: heroST });
+    gsap.to(".scrub-ring", { rotation: 260, svgOrigin: "200 200", ease: "none", scrollTrigger: heroST });
+    gsap.to(".cube", { scale: 1.18, svgOrigin: "200 200", ease: "none", scrollTrigger: heroST });
+
+    /* neon slash drawn along every cut */
+    gsap.utils.toArray(".band:not(.band--first)").forEach(function (band) {
+      gsap.fromTo(band, { "--cutdraw": "0%" }, {
+        "--cutdraw": "100%", ease: "none",
+        scrollTrigger: { trigger: band, start: "top 98%", end: "top 55%", scrub: true }
+      });
+    });
+
+    /* section heads and panels: wipe in, headings decode */
+    gsap.utils.toArray("[data-reveal]").forEach(function (el) {
+      var h = el.querySelector("[data-scramble]");
+      wipe(el, "inset(0% 100% 0% 0%)", {}, {
+        trigger: el, start: "top 88%", once: true,
+        onEnter: function () { if (h) scramble(h, 0.7); }
+      });
+    });
+
+    /* dividers */
+    gsap.utils.toArray("[data-draw]").forEach(function (el) {
+      gsap.from(el, { scaleX: 0, ease: "none", scrollTrigger: { trigger: el, start: "top 98%", end: "top 70%", scrub: true } });
+    });
+
+    /* terminal: teletype steps */
+    wipe("[data-line]", "inset(0% 100% 0% 0%)", { duration: 0.4, ease: "steps(12)", stagger: 0.16 }, { trigger: ".term", start: "top 75%", once: true });
+
+    /* cards: rise from the bottom edge, three per row */
+    gsap.utils.toArray("[data-card]").forEach(function (el, i) {
+      wipe(el, "inset(100% 0% 0% 0%)", { delay: (i % 3) * 0.1, duration: 0.55 }, { trigger: el, start: "top 90%", once: true });
+    });
+    gsap.utils.toArray("[data-line-draw]").forEach(function (el) {
+      gsap.from(el, { scaleX: 0, duration: 0.7, ease: "power4.out", clearProps: "transform", scrollTrigger: { trigger: el, start: "top 90%", once: true } });
+    });
+    gsap.utils.toArray(".bar__fill").forEach(function (el) {
+      gsap.from(el, { scaleX: 0, duration: 1.1, ease: "steps(20)", clearProps: "transform", scrollTrigger: { trigger: el, start: "top 92%", once: true } });
+    });
+
+    /* counters with a flicker at the end */
+    counters.forEach(function (el) {
+      var end = +el.dataset.count, o = { v: 0 };
+      el.textContent = counterText(el, 0);
+      ScrollTrigger.create({
+        trigger: el, start: "top 92%", once: true,
+        onEnter: function () {
+          gsap.to(o, {
+            v: end, duration: 1.8, ease: "power4.out",
+            onUpdate: function () { el.textContent = counterText(el, o.v); },
+            onComplete: function () {
+              el.textContent = counterText(el, end);
+              gsap.fromTo(el, { opacity: 0.15 }, { opacity: 1, duration: 0.35, ease: "steps(5)", clearProps: "opacity" });
+            }
+          });
+        }
+      });
+    });
+
+    /* nav follows the section on screen */
+    ["about", "services", "route", "impact", "quote"].forEach(function (id) {
+      var sec = document.getElementById(id), a = document.querySelector('.top nav a[href="#' + id + '"]');
+      if (!sec || !a) return;
+      ScrollTrigger.create({ trigger: sec, start: "top 55%", end: "bottom 55%", onToggle: function (s) { a.classList.toggle("is-on", s.isActive); } });
+    });
+
+    /* scroll velocity: marquee speed and direction, logo RGB split */
+    var dir = 1, boost = 0, lastBoost = 0;
+    var vt = ScrollTrigger.create({
+      trigger: document.body, start: "top top", end: "bottom bottom",
+      onUpdate: function (self) { dir = self.direction || dir; }
+    });
+    var logoG = document.querySelector(".glitch--scroll");
+    var rows = [].slice.call(document.querySelectorAll(".marq__row"));
+    var tracks = rows.map(function (r, i) { return { el: r.querySelector(".marq__track"), pos: 0, w: 0, sign: i === 0 ? -1 : 1, k: i === 0 ? 1 : 0.8 }; });
+
+    function buildMarq() {
+      tracks.forEach(function (t) {
+        var unit = t.el.getAttribute("data-unit");
+        t.el.innerHTML = unit;
+        var w = t.el.scrollWidth || 1;
+        var n = Math.max(1, Math.ceil(window.innerWidth * 1.4 / w));
+        var half = "";
+        for (var i = 0; i < n; i++) half += unit;
+        t.el.innerHTML = half + half;
+        t.w = t.el.scrollWidth / 2;
+      });
+    }
+    buildMarq();
+    var rt;
+    window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(buildMarq, 200); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(buildMarq);
+
+    gsap.ticker.add(function (time, dt) {
+      var s = Math.min(dt, 64) / 1000;
+      var target = Math.min(Math.abs(vt.getVelocity()) / 1400, 1);
+      boost += (target - boost) * 0.12;
+      var mult = 1 + boost * 6;
+      tracks.forEach(function (t) {
+        if (!t.w) return;
+        t.pos += t.sign * dir * 70 * t.k * mult * s;
+        t.pos = ((t.pos % t.w) + t.w) % t.w - t.w;
+        t.el.style.transform = "translate3d(" + t.pos.toFixed(1) + "px,0,0)";
+      });
+      if (boost > 0.004 || lastBoost > 0.004) {
+        var sk = (-dir * boost * 8).toFixed(2) + "deg";
+        rows.forEach(function (r) { r.style.transform = "skewX(" + sk + ")"; });
+        if (logoG) {
+          logoG.style.setProperty("--sx", (boost * 9).toFixed(2) + "px");
+          logoG.style.setProperty("--so", Math.min(1, boost * 4).toFixed(2));
+        }
+      }
+      lastBoost = boost;
+    });
+
+    /* route: pinned horizontal run on desktop, stacked wipes elsewhere */
+    var mm = gsap.matchMedia();
+    mm.add("(min-width: 860px) and (min-height: 640px)", function () {
+      var sec = document.getElementById("route");
+      var stage = sec.querySelector(".route__stage");
+      var vp = sec.querySelector(".route__viewport");
+      var rail = sec.querySelector(".route__rail");
+      var track = sec.querySelector(".route__track");
+      var stops = [].slice.call(sec.querySelectorAll("[data-stop]"));
+      var nodes = [].slice.call(sec.querySelectorAll(".route__node"));
+      var N = stops.length, last = -1;
+      sec.classList.add("is-horizontal");
+
+      function dist() { return Math.max(0, rail.scrollWidth - vp.clientWidth); }
+      function setStop(idx) {
+        if (idx === last) return;
+        last = idx;
+        stops.forEach(function (s, i) {
+          s.classList.toggle("is-active", i === idx);
+          s.classList.toggle("is-passed", i < idx);
+        });
+        nodes.forEach(function (n, i) { n.classList.toggle("is-on", i <= idx); });
+      }
+      setStop(0);
+
+      gsap.to(rail, {
+        x: function () { return -dist(); },
+        ease: "none",
+        scrollTrigger: {
+          trigger: stage, start: "top top",
+          end: function () { return "+=" + Math.round(dist() * 1.2 + 80); },
+          pin: true, scrub: true, anticipatePin: 1, invalidateOnRefresh: true,
+          onUpdate: function (self) {
+            var p = Math.min(1, self.progress * 1.2);
+            track.style.setProperty("--p", p.toFixed(4));
+            setStop(Math.round(p * (N - 1)));
+          }
+        }
+      });
+
+      return function () {
+        sec.classList.remove("is-horizontal");
+        stops.forEach(function (s) { s.classList.remove("is-active", "is-passed"); });
+        nodes.forEach(function (n) { n.classList.remove("is-on"); });
+        track.style.removeProperty("--p");
+        last = -1;
+      };
+    });
+    mm.add("(max-width: 859.98px), (max-height: 639.98px)", function () {
+      gsap.utils.toArray("[data-stop]").forEach(function (el, i) {
+        wipe(el, "inset(100% 0% 0% 0%)", { delay: (i % 2) * 0.08 }, { trigger: el, start: "top 90%", once: true });
+      });
+    });
+
+    function refresh() { ScrollTrigger.sort(); ScrollTrigger.refresh(); }
+    window.addEventListener("load", refresh);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(refresh);
+  } catch (err) {
+    if (window.console) console.error(err);
+    ScrollTrigger.getAll().forEach(function (t) { t.kill(); });
+    gsap.killTweensOf("*");
+    document.querySelectorAll("[data-hero],[data-reveal],[data-line],[data-card],[data-line-draw],.bar__fill,[data-draw]").forEach(function (el) {
+      el.style.clipPath = ""; el.style.transform = ""; el.style.opacity = "";
+    });
+    setFinal();
+  }
+})();
+</script>
+
+</body></html>
